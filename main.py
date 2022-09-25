@@ -11,18 +11,20 @@ from yaml.loader import SafeLoader
 # Open the file and load the file
 with open('shelly_low_cost_energy.yml') as f:
     data = yaml.load(f, Loader=SafeLoader)
-    
+
 shelly_auth_key = data["shelly_key"]
 shelly_server = data["shelly_server"]
 nordpol_area = data["nordpol_area"]
 
 # Initialize class for fetching Elspot prices
 prices_spot = elspot.Prices()
-prices_spot.currency = "SEK"
+prices_spot.currency = "DKK"
 # Fetch hourly Elspot prices for Finland and print the resulting dictionary
 prices = prices_spot.hourly(areas=[nordpol_area], end_date=date.today())
 
-current_hour = datetime.now(pytz.timezone("Europe/Stockholm")).hour
+print(prices)
+
+current_hour = datetime.now(pytz.timezone("Europe/Copenhagen")).hour
 day_in_week = date.today().weekday()
 
 for device in data["devices"]:
@@ -36,7 +38,8 @@ for device in data["devices"]:
             on = True
         else:
             day_prices = [prices['areas'][nordpol_area]['values'][hour]['value'] for hour in device["hours"]]
-            day_prices.sort()            
+            day_prices.sort()
+            print(day_prices)
             if prices['areas'][nordpol_area]['values'][current_hour]['value'] < day_prices[device["minimum_hours"]]:
                 on = True
     if on:
@@ -51,4 +54,3 @@ for device in data["devices"]:
             "auth_key": shelly_auth_key
         }
         contents = requests.post(url, data=data)
-
